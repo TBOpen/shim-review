@@ -1,0 +1,36 @@
+#!/bin/bash
+
+shimdir=shim-15
+shimcer=shim.cer
+
+if [ ! -f $shimdir/$shimcer ]; then
+    echo Missing $shimdir/$shimcer
+    echo Use the generate-cert script 
+    exit 1
+fi
+
+
+echo Press enter to apply patch
+read xyz
+
+cd $shimdir
+patch -Np1 -i ../shim-15.patch
+cd ..
+
+echo Press enter to start build
+read xyz
+
+cd $shimdir
+#make ENABLE_SHIM_CERT=1
+
+if [ -f cert.o ]; then
+  rm cert.o
+fi
+
+make VENDOR_CERT_FILE=${shimcer}
+
+cd ..
+
+
+
+

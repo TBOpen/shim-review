@@ -18,60 +18,87 @@ Here's the template:
 -------------------------------------------------------------------------------
 What organization or people are asking to have this signed:
 -------------------------------------------------------------------------------
-[your text here]
+TeraByte, Inc.  https://www.terabyteunlimited.com
 
 -------------------------------------------------------------------------------
 What product or service is this for:
 -------------------------------------------------------------------------------
-[your text here]
+Image for Linux Recovery Boot Disk
+Image for UEFI Recovery Boot Disk
+TeraByte OS Deployment Tool Suite (UEFI Boot)
+BootIt UEFI
 
 -------------------------------------------------------------------------------
 What's the justification that this really does need to be signed for the whole world to be able to boot it:
 -------------------------------------------------------------------------------
-[your text here]
+Commerical software with large install base used worldwide.
 
 -------------------------------------------------------------------------------
 Who is the primary contact for security updates, etc.
 -------------------------------------------------------------------------------
-- Name:
-- Position:
-- Email address:
-- PGP key, signed by the other security contacts, and preferably also with signatures that are reasonably well known in the linux community:
+- Name:  David Flicek
+- Position: President
+- Email address: corp@terabyteunlimited.com
+- PGP key, signed by the other security contacts, and preferably also with signatures that are reasonably well known in the linux community:  
+  Wow, I haven't used PGP in a very long time - I remember starting using it back
+  in the CompuServe days.  Anyway, looks like I still have support@terabyteunlimited.com 
+  and terabyte@terabyteunlimited.com in the PGP database.  
 
 -------------------------------------------------------------------------------
 Who is the secondary contact for security updates, etc.
 -------------------------------------------------------------------------------
-- Name:
-- Position:
-- Email address:
-- PGP key, signed by the other security contacts, and preferably also with signatures that are reasonably well known in the linux community:
+N/A
 
 -------------------------------------------------------------------------------
 What upstream shim tag is this starting from:
 -------------------------------------------------------------------------------
-[our url here]
+https://github.com/rhboot/shim/tree/15  (The shim-15 release download)
 
 -------------------------------------------------------------------------------
 URL for a repo that contains the exact code which was built to get this binary:
 -------------------------------------------------------------------------------
-[your url here]
+https://github.com/TBOpen/shim-review
 
 -------------------------------------------------------------------------------
 What patches are being applied and why:
 -------------------------------------------------------------------------------
-[your text here]
+Fixes the code peter jones implemented on our behalf via ALLOW_32BIT_KERNEL_ON_X64 
+which was misunderstood.  We have an option to boot a signed x686 kernel on x64
+machines. The patch fixes it, it also disables fallback as we don't need it, and 
+allows us to provide different names to boot instead of a hard coded grubx64.efi. 
+Also fixes potential memory leak issues and patch to fix fedora 29 issue with header 
+files being moved to a different directory.
 
 -------------------------------------------------------------------------------
 What OS and toolchain must we use to reproduce this build?  Include where to find it, etc.  We're going to try to reproduce your build as close as possible to verify that it's really a build of the source tree you tell us it is, so these need to be fairly thorough. At the very least include the specific versions of gcc, binutils, and gnu-efi which were used, and where to find those binaries.
 -------------------------------------------------------------------------------
-[your text here]
+I used Fedora 29. This repo has the various shim files.   download all files to
+their own directory.  The "shim-15.tar.gz" file is from the shim site.  
+1 - Extract "shim-15.tar.gz" to the subdirectory so it creates the subdirectory 
+    named "shim-15".  
+2 - Copy the "shim.cer" file to the "shim-15" subdirectory.  
+3 - Run "make_shim_15" to do the build.  
+4 - Once done I ran "strip shimx64.efi" on it.
+    Note: I did that from Ubuntu if it matters: GNU strip (GNU Bin Utils for debian) 2.25
 
 -------------------------------------------------------------------------------
 Which files in this repo are the logs for your build?   This should include logs for creating the buildroots, applying patches, doing the build, creating the archives, etc.
 -------------------------------------------------------------------------------
-[your text here]
+I have uploaded the versions of gcc, ld, and linux version.  It should be a plain
+install.  You should have no problem creating a matching shimx64.efi version following
+instructions above (not counting date/time specific items embeeded in binaries).  
+This is just a normal install in a VM that that has been upgraded several
+times to bring it up to Fedora 29.
 
 -------------------------------------------------------------------------------
 Add any additional information you think we may need to validate this shim
 -------------------------------------------------------------------------------
-[your text here]
+I typically go straight to MS to validate it, but want to try this method to
+see how well if flows.  It should be plain enough to reproduce without problems.  
+I'm moving from SHIM14 to SHIM15 since I need to update GRUB 2 to the latest
+version with the YY_FATAL_ERROR patch that changes grub_printf to grub_fatal
+which I also have done (based on Ubuntu version grub2_2.02-2ubuntu8-16).  I
+see no need for you to have to deal with GRUB logs and building since there 
+would be no point; anyone trying to cheat the system for some reason could 
+send you something good then replace with something else. 
+
