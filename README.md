@@ -102,3 +102,42 @@ see no need for you to have to deal with GRUB logs and building since there
 would be no point; anyone trying to cheat the system for some reason could 
 send you something good then replace with something else. 
 
+
+-------------------------------------------------------------------------------
+If bootloader, shim loading is, grub2: is CVE-2020-10713 fixed ?
+-------------------------------------------------------------------------------
+Yes.
+
+-------------------------------------------------------------------------------
+If bootloader, shim loading is, grub2, and previous shims were trusting affected
+by CVE-2020-10713 grub2:
+* were old shims hashes provided to Microsoft for verification
+  and to be added to future DBX update ?
+* Does your new chain of trust disallow booting old, affected by CVE-2020-10713,
+  grub2 builds ?
+-------------------------------------------------------------------------------
+MS has the files because they signed them.  If they want me to provide or mark
+it as expired, that's fine (but not until the new release is out or people may
+not be able to restore or use their systems.).
+
+Yes, the new shim won't be able to load the old grub2.
+
+-------------------------------------------------------------------------------
+If your boot chain of trust includes linux kernel, is
+"efi: Restrict efivar_ssdt_load when the kernel is locked down"
+upstream commit 1957a85b0032a81e6482ca4aab883643b8dae06e applied ?
+Is "ACPI: configfs: Disallow loading ACPI tables when locked down"
+upstream commit 75b0cea7bf307f362057cc778efe89af4c615354 applied ?
+-------------------------------------------------------------------------------
+It will because we continually update and won't be updating until this shim
+thing is done.   We'll still use the 5.4.x kernels and the patch was applied in 
+5.4.50 our release will be beyond that.  Typically the latest or one version back
+at the time we do the release.
+
+-------------------------------------------------------------------------------
+If you use vendor_db functionality of providing multiple certificates and/or
+hashes please briefly describe your certificate setup. If there are whitelisted hashes
+please provide exact binaries for which hashes are created via file sharing service,
+available in public with anonymous access for verification
+-------------------------------------------------------------------------------
+N/A don't use it.
