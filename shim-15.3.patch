@@ -1,0 +1,212 @@
+diff -ur shim-15.3-org/Make.defaults shim-15.3/Make.defaults
+--- shim-15.3-org/Make.defaults	2021-03-23 11:39:44.000000000 -0700
++++ shim-15.3/Make.defaults	2021-03-23 15:28:28.173691802 -0700
+@@ -27,7 +27,8 @@
+ DEBUGINFO	?= $(prefix)/lib/debug/
+ DEBUGSOURCE	?= $(prefix)/src/debug/
+ OSLABEL		?= $(EFIDIR)
+-DEFAULT_LOADER	?= \\\\grub$(ARCH_SUFFIX).efi
++DEFAULT_LOADER	?= grub$(ARCH_SUFFIX).efi
++DEFAULT_LOADER_FROM_FILE ?= shim$(ARCH_SUFFIX).dat
+ DASHJ		?= -j$(shell echo $$(($$(grep -c "^model name" /proc/cpuinfo) + 1)))
+ 
+ ARCH		?= $(shell $(CC) -dumpmachine | cut -f1 -d- | sed s,i[3456789]86,ia32,)
+@@ -99,8 +100,11 @@
+ endif
+ 
+ DEFINES		= -DDEFAULT_LOADER='L"$(DEFAULT_LOADER)"' \
+-		  -DDEFAULT_LOADER_CHAR='"$(DEFAULT_LOADER)"'
+-
++		  -DDEFAULT_LOADER_CHAR='"$(DEFAULT_LOADER)"' \
++		  -DALLOW_32BIT_KERNEL_ON_X64 \
++		  -DDISABLE_FALLBACK \
++		  -DDEFAULT_LOADER_FROM_FILE='L"$(DEFAULT_LOADER_FROM_FILE)"'
++ 
+ INCLUDES	= -nostdinc \
+ 		  -I$(TOPDIR)/Cryptlib -I$(TOPDIR)/Cryptlib/Include \
+ 		  -I$(EFI_INCLUDE) -I$(EFI_INCLUDE)/$(ARCH_GNUEFI) -I$(EFI_INCLUDE)/protocol \
+diff -ur shim-15.3-org/pe.c shim-15.3/pe.c
+--- shim-15.3-org/pe.c	2021-03-23 11:39:44.000000000 -0700
++++ shim-15.3/pe.c	2021-03-23 15:37:37.883758642 -0700
+@@ -640,7 +640,7 @@
+ 	return 0;
+ }
+ 
+-static const UINT16 machine_type =
++static const UINT16 UNUSED machine_type =
+ #if defined(__x86_64__)
+ 	IMAGE_FILE_MACHINE_X64;
+ #elif defined(__aarch64__)
+@@ -658,16 +658,11 @@
+ static int
+ image_is_loadable(EFI_IMAGE_OPTIONAL_HEADER_UNION *PEHdr)
+ {
+-	/* If the machine type doesn't match the binary, bail, unless
+-	 * we're in an allowed 64-on-32 scenario */
+-	if (PEHdr->Pe32.FileHeader.Machine != machine_type) {
+-		if (!(machine_type == IMAGE_FILE_MACHINE_I386 &&
+-		      PEHdr->Pe32.FileHeader.Machine == IMAGE_FILE_MACHINE_X64 &&
+-		      allow_64_bit())) {
+-			return 0;
+-		}
+-	}
+-
++	/* removed logic of 64-on-32 because it stops 32-on-64 and can't run x64 on x32.    *
++	 * This secion was added by Peter for a 32-on-64 situation back in 2014 but there   *
++	 * must have been a misunderstanding in our exchange of what my original patch did. *
++	 * So this section should be removed all together because you can't run x64 on x32  */
++	
+ 	/* If it's not a header type we recognize at all, bail */
+ 	switch (PEHdr->Pe32Plus.OptionalHeader.Magic) {
+ 	case EFI_IMAGE_NT_OPTIONAL_HDR64_MAGIC:
+diff -ur shim-15.3-org/shim.c shim-15.3/shim.c
+--- shim-15.3-org/shim.c	2021-03-23 11:39:44.000000000 -0700
++++ shim-15.3/shim.c	2021-03-23 15:28:28.176691824 -0700
+@@ -714,8 +714,11 @@
+ }
+ 
+ static int
+-should_use_fallback(EFI_HANDLE image_handle)
++should_use_fallback(EFI_HANDLE image_handle UNUSED)
+ {
++#if DISABLE_FALLBACK
++	return 0;
++#else
+ 	EFI_LOADED_IMAGE *li;
+ 	unsigned int pathlen = 0;
+ 	CHAR16 *bootpath = NULL;
+@@ -786,6 +789,7 @@
+ 		FreePool(bootpath);
+ 
+ 	return ret;
++#endif
+ }
+ 
+ /*
+@@ -885,7 +889,8 @@
+  * Open the second stage bootloader and read it into a buffer
+  */
+ static EFI_STATUS load_image (EFI_LOADED_IMAGE *li, void **data,
+-			      int *datasize, CHAR16 *PathName)
++			      int *datasize, CHAR16 *PathName, 
++			      BOOLEAN ignoremissingfile)
+ {
+ 	EFI_STATUS efi_status;
+ 	EFI_HANDLE device;
+@@ -918,7 +923,8 @@
+ 	 */
+ 	efi_status = root->Open(root, &grub, PathName, EFI_FILE_MODE_READ, 0);
+ 	if (EFI_ERROR(efi_status)) {
+-		perror(L"Failed to open %s - %r\n", PathName, efi_status);
++		if (!ignoremissingfile || efi_status != EFI_NOT_FOUND)
++			perror(L"Failed to open %s - %r\n", PathName, efi_status);
+ 		goto error;
+ 	}
+ 
+@@ -1148,7 +1154,7 @@
+ 		/*
+ 		 * Read the new executable off disk
+ 		 */
+-		efi_status = load_image(shim_li, &data, &datasize, PathName);
++		efi_status = load_image(shim_li, &data, &datasize, PathName, FALSE);
+ 		if (EFI_ERROR(efi_status)) {
+ 			perror(L"Failed to load image %s: %r\n",
+ 			       PathName, efi_status);
+@@ -1380,6 +1386,64 @@
+ 	return ret;
+ }
+ 
++#if defined(DEFAULT_LOADER_FROM_FILE)
++/*
++ * Load file with name of image to run
++ */
++EFI_STATUS set_second_stage_from_file(EFI_LOADED_IMAGE *li)
++{
++	EFI_STATUS efi_status;
++	CHAR16 *PathName = NULL;
++	void *data = NULL;
++	int datasize;
++	EFI_DEVICE_PATH *devpath = NULL;
++
++	/*
++	 * Build a new path from the existing one plus the filename to the file with the name
++	 */
++	efi_status = generate_path(DEFAULT_LOADER_FROM_FILE, li, &devpath, &PathName);
++
++	if (efi_status != EFI_SUCCESS) {
++		perror(L"Unable to generate path %s: %r\n", DEFAULT_LOADER_FROM_FILE, efi_status);
++		return efi_status;
++	}
++	
++	/* don't need devpath */
++	FreePool(devpath);
++	devpath = NULL;
++
++	/*
++	 * Load the file if it exists
++	 */
++
++	efi_status = load_image(li, &data, &datasize, PathName, TRUE);
++
++	if (efi_status != EFI_SUCCESS) {
++		if (efi_status!=EFI_NOT_FOUND)
++			perror(L"Failed to load file %s: %r\n", PathName, efi_status);
++	}
++	/*
++	 * Check if the name appears valid
++	 */
++	else if ((datasize % sizeof(CHAR16)) == 0 &&
++            *((CHAR16*) data+(datasize/sizeof(CHAR16))-1)==0 &&
++	    StrLen((CHAR16*) data)==(datasize/sizeof(CHAR16))-1) {
++		/* Name appears valid so use it */
++		second_stage = (CHAR16*) data;	  
++	}
++	else {
++		perror(L"Contents of %s are not supported\n", PathName);
++		efi_status=EFI_UNSUPPORTED;
++		FreePool(data);
++	}
++
++	FreePool(PathName);
++
++	return efi_status;
++}
++#endif
++
++
+ /*
+  * Check the load options to specify the second stage loader
+  */
+@@ -1415,6 +1479,10 @@
+ 	if (li->LoadOptionsSize % 2 != 0)
+ 		return EFI_INVALID_PARAMETER;
+ 
++	#if defined(DEFAULT_LOADER_FROM_FILE)
++	set_second_stage_from_file(li);
++	#endif
++
+ 	/* So, load options are a giant pain in the ass.  If we're invoked
+ 	 * from the EFI shell, we get something like this:
+ 
+@@ -1596,6 +1664,9 @@
+ 			loader_str[i] = start[i];
+ 		loader_str[loader_len/2] = L'\0';
+ 
++		if (second_stage)
++			FreePool(second_stage);
++
+ 		second_stage = loader_str;
+ 		load_options = remaining_size ? start + (loader_len/2) : NULL;
+ 		load_options_size = remaining_size;
+@@ -1780,8 +1851,10 @@
+ 	/*
+ 	 * Free the space allocated for the alternative 2nd stage loader
+ 	 */
+-	if (load_options_size > 0 && second_stage)
++	if (second_stage) {
+ 		FreePool(second_stage);
++		second_stage=NULL;
++	}
+ 
+ 	console_fini();
+ }
