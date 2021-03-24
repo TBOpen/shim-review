@@ -4,12 +4,14 @@ This repo is for review of requests for signing shim.  To create a request for r
 - edit the template below
 - add the shim.efi to be signed
 - add build logs
+- add any additional binaries/certificates/SHA256 hashes that may be needed
 - commit all of that
 - tag it with a tag of the form "myorg-shim-arch-YYYYMMDD"
 - push that to github
 - file an issue at https://github.com/rhboot/shim-review/issues with a link to your branch
+- approval is ready when you have accepted tag
 
-Note that we really only have experience with using grub2 on Linux, so asking
+Note that we really only have experience with using GRUB2 on Linux, so asking
 us to endorse anything else for signing is going to require some convincing on
 your part.
 
@@ -50,9 +52,13 @@ Who is the secondary contact for security updates, etc.
 N/A
 
 -------------------------------------------------------------------------------
-What upstream shim tag is this starting from:
+Please create your shim binaries starting with the 15.3 shim release tar file:
+https://github.com/rhboot/shim/releases/download/15.3/shim-15.3.tar.bz2
+
+This matches https://github.com/rhboot/shim/releases/tag/15.3 and contains
+the appropriate gnu-efi source.
 -------------------------------------------------------------------------------
-https://github.com/rhboot/shim/tree/15  (The shim-15 release download)
+yes.  https://github.com/rhboot/shim/releases/tag/15.3 (shim-15.3 release)
 
 -------------------------------------------------------------------------------
 URL for a repo that contains the exact code which was built to get this binary:
@@ -62,24 +68,87 @@ https://github.com/TBOpen/shim-review
 -------------------------------------------------------------------------------
 What patches are being applied and why:
 -------------------------------------------------------------------------------
-Fixes the code peter jones implemented on our behalf via ALLOW_32BIT_KERNEL_ON_X64 
-which was misunderstood.  We have an option to boot a signed x686 kernel on x64
-machines. The patch fixes it, it also disables fallback as we don't need it, and 
+Removes the x64 on x32 section which prevents the x32 on x64 from working. 
+Explained in patch.  Option to disable fallback as we don't need it, and 
 allows us to provide different names to boot instead of a hard coded grubx64.efi. 
-Also fixes potential memory leak issues and patch to fix fedora 29 issue with header 
-files being moved to a different directory.
+Also fixes potential memory leak issues.
+
+-------------------------------------------------------------------------------
+If bootloader, shim loading is, GRUB2: is CVE-2020-14372, CVE-2020-25632,
+ CVE-2020-25647, CVE-2020-27749, CVE-2020-27779, CVE-2021-20225, CVE-2021-20233,
+ CVE-2020-10713, CVE-2020-14308, CVE-2020-14309, CVE-2020-14310, CVE-2020-14311,
+ CVE-2020-15705, and if you are shipping the shim_lock module CVE-2021-3418
+-------------------------------------------------------------------------------
+Yes, I'll be using Ubuntu 2.04 version with latest patches, waiting a few days
+to see if they release one with 2.06 once that is released and using that.
+
+-------------------------------------------------------------------------------
+What exact implementation of Secureboot in GRUB2 ( if this is your bootloader ) you have ?
+* Upstream GRUB2 shim_lock verifier or * Downstream RHEL/Fedora/Debian/Canonical like implementation ?
+-------------------------------------------------------------------------------
+Will be building based on Ubnutu version keeping an eye on:
+https://ubuntu.com/security/cve?q=&package=grub2
+to be sure to build latest "not vulnerable" version.
+
+-------------------------------------------------------------------------------
+If bootloader, shim loading is, GRUB2, and previous shims were trusting affected
+by CVE-2020-14372, CVE-2020-25632, CVE-2020-25647, CVE-2020-27749,
+  CVE-2020-27779, CVE-2021-20225, CVE-2021-20233, CVE-2020-10713,
+  CVE-2020-14308, CVE-2020-14309, CVE-2020-14310, CVE-2020-14311, CVE-2020-15705,
+  and if you were shipping the shim_lock module CVE-2021-3418
+  ( July 2020 grub2 CVE list + March 2021 grub2 CVE list )
+  grub2:
+* were old shims hashes provided to Microsoft for verification
+  and to be added to future DBX update ?
+* Does your new chain of trust disallow booting old, affected by CVE-2020-14372,
+  CVE-2020-25632, CVE-2020-25647, CVE-2020-27749,
+  CVE-2020-27779, CVE-2021-20225, CVE-2021-20233, CVE-2020-10713,
+  CVE-2020-14308, CVE-2020-14309, CVE-2020-14310, CVE-2020-14311, CVE-2020-15705,
+  and if you were shipping the shim_lock module CVE-2021-3418
+  ( July 2020 grub2 CVE list + March 2021 grub2 CVE list )
+  grub2 builds ?
+-------------------------------------------------------------------------------
+The old grub version will not work with the new shim.  New certificate was created.
+
+MS being the signing has the information, and it's in the dbx.
+
+-------------------------------------------------------------------------------
+If your boot chain of trust includes linux kernel, is
+"efi: Restrict efivar_ssdt_load when the kernel is locked down"
+upstream commit 1957a85b0032a81e6482ca4aab883643b8dae06e applied ?
+Is "ACPI: configfs: Disallow loading ACPI tables when locked down"
+upstream commit 75b0cea7bf307f362057cc778efe89af4c615354 applied ?
+-------------------------------------------------------------------------------
+It will be used with 5.10.19 or later which already has all the patches.
+
+-------------------------------------------------------------------------------
+If you use vendor_db functionality of providing multiple certificates and/or
+hashes please briefly describe your certificate setup. If there are allow-listed hashes
+please provide exact binaries for which hashes are created via file sharing service,
+available in public with anonymous access for verification
+-------------------------------------------------------------------------------
+N/A don't use it.
+
+-------------------------------------------------------------------------------
+If you are re-using a previously used (CA) certificate, you will need
+to add the hashes of the previous GRUB2 binaries to vendor_dbx in shim
+in order to prevent GRUB2 from being able to chainload those older GRUB2
+binaries. If you are changing to a new (CA) certificate, this does not
+apply. Please describe your strategy.
+-------------------------------------------------------------------------------
+Generated new certificate that has not been released in any MS signed shim.
 
 -------------------------------------------------------------------------------
 What OS and toolchain must we use to reproduce this build?  Include where to find it, etc.  We're going to try to reproduce your build as close as possible to verify that it's really a build of the source tree you tell us it is, so these need to be fairly thorough. At the very least include the specific versions of gcc, binutils, and gnu-efi which were used, and where to find those binaries.
+If possible, provide a Dockerfile that rebuilds the shim.
 -------------------------------------------------------------------------------
 I used Fedora 29. This repo has the various shim files.   download all files to
-their own directory.  The "shim-15.tar.gz" file is from the shim site.  
-1 - Extract "shim-15.tar.gz" to the subdirectory so it creates the subdirectory 
-    named "shim-15".  
-2 - Copy the "shim.cer" file to the "shim-15" subdirectory.  
-3 - Run "make_shim_15" to do the build.  
+their own directory.  The "shim-15.3.tar.bz2" file is from link provided.  
+1 - Extract "shim-15.3.tar.bz2" to the subdirectory so it creates the subdirectory 
+    named "shim-15.3".  
+2 - Copy the "shim.cer" file to the "shim-15.3" subdirectory.  
+3 - Run "make_shim_15.3" to do the build.  
 4 - Once done I ran "strip shimx64.efi" on it.
-    Note: I did that from Ubuntu if it matters: GNU strip (GNU Bin Utils for debian) 2.25
 
 -------------------------------------------------------------------------------
 Which files in this repo are the logs for your build?   This should include logs for creating the buildroots, applying patches, doing the build, creating the archives, etc.
@@ -90,54 +159,16 @@ instructions above (not counting date/time specific items embeeded in binaries).
 This is just a normal install in a VM that that has been upgraded several
 times to bring it up to Fedora 29.
 
+
 -------------------------------------------------------------------------------
 Add any additional information you think we may need to validate this shim
 -------------------------------------------------------------------------------
-I typically go straight to MS to validate it, but want to try this method to
-see how well if flows.  It should be plain enough to reproduce without problems.  
-I'm moving from SHIM14 to SHIM15 since I need to update GRUB 2 to the latest
-version with the YY_FATAL_ERROR patch that changes grub_printf to grub_fatal
-which I also have done (based on Ubuntu version grub2_2.02-2ubuntu8-16).  I
-see no need for you to have to deal with GRUB logs and building since there 
-would be no point; anyone trying to cheat the system for some reason could 
-send you something good then replace with something else. 
+Note: I created the shim.crt using openssl because efikeygen was giving me
+trouble.   It's 2020 because that's when I created it after the boothole, 
+but it hasn't been used in production yet.
 
-
--------------------------------------------------------------------------------
-If bootloader, shim loading is, grub2: is CVE-2020-10713 fixed ?
--------------------------------------------------------------------------------
-Yes.
-
--------------------------------------------------------------------------------
-If bootloader, shim loading is, grub2, and previous shims were trusting affected
-by CVE-2020-10713 grub2:
-* were old shims hashes provided to Microsoft for verification
-  and to be added to future DBX update ?
-* Does your new chain of trust disallow booting old, affected by CVE-2020-10713,
-  grub2 builds ?
--------------------------------------------------------------------------------
-MS has the files because they signed them.  If they want me to provide or mark
-it as expired, that's fine (but not until the new release is out or people may
-not be able to restore or use their systems.).
-
-Yes, the new shim won't be able to load the old grub2.
-
--------------------------------------------------------------------------------
-If your boot chain of trust includes linux kernel, is
-"efi: Restrict efivar_ssdt_load when the kernel is locked down"
-upstream commit 1957a85b0032a81e6482ca4aab883643b8dae06e applied ?
-Is "ACPI: configfs: Disallow loading ACPI tables when locked down"
-upstream commit 75b0cea7bf307f362057cc778efe89af4c615354 applied ?
--------------------------------------------------------------------------------
-It will because we continually update and won't be updating until this shim
-thing is done.   We'll still use the 5.4.x kernels and the patch was applied in 
-5.4.50 our release will be beyond that.  Typically the latest or one version back
-at the time we do the release.
-
--------------------------------------------------------------------------------
-If you use vendor_db functionality of providing multiple certificates and/or
-hashes please briefly describe your certificate setup. If there are whitelisted hashes
-please provide exact binaries for which hashes are created via file sharing service,
-available in public with anonymous access for verification
--------------------------------------------------------------------------------
-N/A don't use it.
+openssl req -newkey rsa:2048 -x509 -sha256 -days 3650 -nodes \
+            -out shim.crt -keyout shim.key \
+            -subj "/CN=TeraByte UEFI SB 2020/O=Terabyte Inc/L=Las Vegas/ST=Nevada/C=US"
+openssl pkcs12 -export -out shim.pfx -inkey shim.key -in shim.crt
+openssl x509 -outform der -in shim.crt -out shim.cer
