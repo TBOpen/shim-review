@@ -1,6 +1,13 @@
+diff -ur shim-15.3-org/data/sbat.csv shim-15.3/data/sbat.csv
+--- shim-15.3-org/data/sbat.csv	2021-03-23 11:39:44.000000000 -0700
++++ shim-15.3/data/sbat.csv	2021-03-26 13:58:49.502039829 -0700
+@@ -1,2 +1,3 @@
+ sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
+ shim,1,UEFI shim,shim,1,https://github.com/rhboot/shim
++shim.tb,1,TeraByte,UEFI shim,1,https://www.terabyteunlimited.com
 diff -ur shim-15.3-org/Make.defaults shim-15.3/Make.defaults
 --- shim-15.3-org/Make.defaults	2021-03-23 11:39:44.000000000 -0700
-+++ shim-15.3/Make.defaults	2021-03-23 15:28:28.173691802 -0700
++++ shim-15.3/Make.defaults	2021-03-23 15:39:30.365589838 -0700
 @@ -27,7 +27,8 @@
  DEBUGINFO	?= $(prefix)/lib/debug/
  DEBUGSOURCE	?= $(prefix)/src/debug/
@@ -27,7 +34,7 @@ diff -ur shim-15.3-org/Make.defaults shim-15.3/Make.defaults
  		  -I$(EFI_INCLUDE) -I$(EFI_INCLUDE)/$(ARCH_GNUEFI) -I$(EFI_INCLUDE)/protocol \
 diff -ur shim-15.3-org/pe.c shim-15.3/pe.c
 --- shim-15.3-org/pe.c	2021-03-23 11:39:44.000000000 -0700
-+++ shim-15.3/pe.c	2021-03-23 15:37:37.883758642 -0700
++++ shim-15.3/pe.c	2021-03-23 15:39:30.366589845 -0700
 @@ -640,7 +640,7 @@
  	return 0;
  }
@@ -61,7 +68,7 @@ diff -ur shim-15.3-org/pe.c shim-15.3/pe.c
  	case EFI_IMAGE_NT_OPTIONAL_HDR64_MAGIC:
 diff -ur shim-15.3-org/shim.c shim-15.3/shim.c
 --- shim-15.3-org/shim.c	2021-03-23 11:39:44.000000000 -0700
-+++ shim-15.3/shim.c	2021-03-23 15:28:28.176691824 -0700
++++ shim-15.3/shim.c	2021-03-23 15:39:30.368589860 -0700
 @@ -714,8 +714,11 @@
  }
  
