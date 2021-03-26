@@ -79,8 +79,8 @@ If bootloader, shim loading is, GRUB2: is CVE-2020-14372, CVE-2020-25632,
  CVE-2020-10713, CVE-2020-14308, CVE-2020-14309, CVE-2020-14310, CVE-2020-14311,
  CVE-2020-15705, and if you are shipping the shim_lock module CVE-2021-3418
 -------------------------------------------------------------------------------
-Yes, I'll be using Ubuntu 2.04 version with latest patches, waiting a few days
-to see if they release one with 2.06 once that is released and using that.
+Yes, I'll be using Ubuntu 20.04.2 GRUB 2.04 version with latest patches.
+Keeping an eye out on: https://ubuntu.com/security/cve?q=&package=grub2
 
 -------------------------------------------------------------------------------
 What exact implementation of Secureboot in GRUB2 ( if this is your bootloader ) you have ?
@@ -88,7 +88,7 @@ What exact implementation of Secureboot in GRUB2 ( if this is your bootloader ) 
 -------------------------------------------------------------------------------
 Will be building based on Ubnutu version keeping an eye on:
 https://ubuntu.com/security/cve?q=&package=grub2
-to be sure to build latest "not vulnerable" version.
+
 
 -------------------------------------------------------------------------------
 If bootloader, shim loading is, GRUB2, and previous shims were trusting affected
@@ -110,7 +110,7 @@ by CVE-2020-14372, CVE-2020-25632, CVE-2020-25647, CVE-2020-27749,
 -------------------------------------------------------------------------------
 The old grub version will not work with the new shim.  New certificate was created.
 
-MS being the signing has the information, and it's in the dbx.
+MS being the signer has the information, and it's in the dbx.
 
 -------------------------------------------------------------------------------
 If your boot chain of trust includes linux kernel, is
@@ -120,6 +120,8 @@ Is "ACPI: configfs: Disallow loading ACPI tables when locked down"
 upstream commit 75b0cea7bf307f362057cc778efe89af4c615354 applied ?
 -------------------------------------------------------------------------------
 It will be used with 5.10.19 or later which already has all the patches.
+Confirm that LOCK_DOWN_KERNEL_FORCE_INTEGRITY is the required kernel config
+option.
 
 -------------------------------------------------------------------------------
 If you use vendor_db functionality of providing multiple certificates and/or
