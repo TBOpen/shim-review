@@ -52,13 +52,13 @@ Who is the secondary contact for security updates, etc.
 N/A
 
 -------------------------------------------------------------------------------
-Please create your shim binaries starting with the 15.3 shim release tar file:
-https://github.com/rhboot/shim/releases/download/15.3/shim-15.3.tar.bz2
+Please create your shim binaries starting with the 15.4 shim release tar file:
+https://github.com/rhboot/shim/releases/download/15.4/shim-15.4.tar.bz2
 
-This matches https://github.com/rhboot/shim/releases/tag/15.3 and contains
+This matches https://github.com/rhboot/shim/releases/tag/15.4 and contains
 the appropriate gnu-efi source.
 -------------------------------------------------------------------------------
-yes.  https://github.com/rhboot/shim/releases/tag/15.3 (shim-15.3 release)
+yes.  https://github.com/rhboot/shim/releases/tag/15.4 (shim-15.4 release)
 
 -------------------------------------------------------------------------------
 URL for a repo that contains the exact code which was built to get this binary:
@@ -145,11 +145,11 @@ What OS and toolchain must we use to reproduce this build?  Include where to fin
 If possible, provide a Dockerfile that rebuilds the shim.
 -------------------------------------------------------------------------------
 I used Fedora 29. This repo has the various shim files.   download all files to
-their own directory.  The "shim-15.3.tar.bz2" file is from link provided.  
-1 - Extract "shim-15.3.tar.bz2" to the subdirectory so it creates the subdirectory 
-    named "shim-15.3".  
-2 - Copy the "shim.cer" file to the "shim-15.3" subdirectory.  
-3 - Run "make_shim_15.3" to do the build.  
+their own directory.  The "shim-15.4.tar.bz2" file is from link provided.  
+1 - Extract "shim-15.4.tar.bz2" to the subdirectory so it creates the subdirectory 
+    named "shim-15.4".  
+2 - Copy the "shim.cer" file to the "shim-15.4" subdirectory.  
+3 - Run "make_shim_15.4" to do the build.  
 4 - Once done I ran "strip shimx64.efi" on it.
 
 -------------------------------------------------------------------------------
