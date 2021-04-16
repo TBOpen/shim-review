@@ -152,6 +152,11 @@ their own directory.  The "shim-15.4.tar.bz2" file is from link provided.
 3 - Run "make_shim_15.4" to do the build.  
 4 - Once done I ran "strip shimx64.efi" on it.
 
+Dockerfile method:
+
+1 - Run "docker_make_shim".
+2 - The file will be placed in "terabyte_shim-15.4_built"
+
 -------------------------------------------------------------------------------
 Which files in this repo are the logs for your build?   This should include logs for creating the buildroots, applying patches, doing the build, creating the archives, etc.
 -------------------------------------------------------------------------------
@@ -161,6 +166,7 @@ instructions above (not counting date/time specific items embeeded in binaries).
 This is just a normal install in a VM that that has been upgraded several
 times to bring it up to Fedora 29.
 
+Dockerfile now exists.
 
 -------------------------------------------------------------------------------
 Add any additional information you think we may need to validate this shim

@@ -44,7 +44,7 @@ diff -ur shim-15.3-org/pe.c shim-15.3/pe.c
  #if defined(__x86_64__)
  	IMAGE_FILE_MACHINE_X64;
  #elif defined(__aarch64__)
-@@ -658,16 +658,11 @@
+@@ -658,16 +658,9 @@
  static int
  image_is_loadable(EFI_IMAGE_OPTIONAL_HEADER_UNION *PEHdr)
  {
@@ -58,10 +58,8 @@ diff -ur shim-15.3-org/pe.c shim-15.3/pe.c
 -		}
 -	}
 -
-+	/* removed logic of 64-on-32 because it stops 32-on-64 and can't run x64 on x32.    *
-+	 * This secion was added by Peter for a 32-on-64 situation back in 2014 but there   *
-+	 * must have been a misunderstanding in our exchange of what my original patch did. *
-+	 * So this section should be removed all together because you can't run x64 on x32  */
++	/* removed logic of 64-on-32 because it stops 32-on-64 (ALLOW_32BIT_KERNEL_ON_X64)  *
++	 * and secion not needed since allow_64_bit() already has correct logic.            */
 +	
  	/* If it's not a header type we recognize at all, bail */
  	switch (PEHdr->Pe32Plus.OptionalHeader.Magic) {
