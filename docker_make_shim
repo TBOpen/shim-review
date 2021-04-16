@@ -1,0 +1,28 @@
+#!/bin/bash
+
+##############################
+# setup variables
+##############################
+shimdir=shim-15.4
+shimtag=terabyte_${shimdir}
+shimout=${shimtag}_built
+
+##############################
+# build
+##############################
+if [ "$1" = "rebuild" ]; then
+ docker build --no-cache -t "${shimtag}" .
+else
+ docker build -t "${shimtag}" .
+fi
+
+##############################
+# copy out the binary
+##############################
+mkdir -p "${shimout}"
+containerid=$(docker create "${shimtag}")
+docker cp "${containerid}:/${shimdir}/shimx64.efi" "${shimout}"
+docker rm -v ${containerid}
+
+echo "${0} script completed."
+
