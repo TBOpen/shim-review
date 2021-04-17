@@ -15,6 +15,7 @@ RUN tar xvfj shim-15.4.tar.bz2
 COPY cert/shim.cer /shim-15.4
 COPY shim-15.4.patch /
 COPY make_shim_15.4 /
+RUN chmod +x /make_shim_15.4
 RUN ./make_shim_15.4
 RUN strip /shim-15.4/shimx64.efi
 
