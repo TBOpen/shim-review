@@ -1,0 +1,213 @@
+diff -ur grub2-2.02-org/grub-core/disk/efi/efidisk.c grub2-2.02/grub-core/disk/efi/efidisk.c
+--- grub2-2.02-org/grub-core/disk/efi/efidisk.c	2017-04-24 05:16:00.000000000 -0400
++++ grub2-2.02/grub-core/disk/efi/efidisk.c	2018-09-18 18:52:05.380679173 -0400
+@@ -27,6 +27,9 @@
+ #include <grub/efi/efi.h>
+ #include <grub/efi/disk.h>
+ 
++/* break up io to prevent problems under some UEFI envrionments */
++#define EFIDISK_C_MAXIOSECS 0x100U
++
+ struct grub_efidisk_data
+ {
+   grub_efi_handle_t handle;
+@@ -583,21 +586,34 @@
+ 		   grub_size_t size, char *buf)
+ {
+   grub_efi_status_t status;
+-
+-  grub_dprintf ("efidisk",
+-		"reading 0x%lx sectors at the sector 0x%llx from %s\n",
+-		(unsigned long) size, (unsigned long long) sector, disk->name);
+-
+-  status = grub_efidisk_readwrite (disk, sector, size, buf, 0);
+-
+-  if (status == GRUB_EFI_NO_MEDIA)
+-    return grub_error (GRUB_ERR_OUT_OF_RANGE, N_("no media in `%s'"), disk->name);
+-  else if (status != GRUB_EFI_SUCCESS)
+-    return grub_error (GRUB_ERR_READ_ERROR,
+-		       N_("failure reading sector 0x%llx from `%s'"),
+-		       (unsigned long long) sector,
+-		       disk->name);
+-
++  grub_size_t sector_count;
++  
++  /* break up reads to EFIDISK_C_MAXIOSECS size chunks */
++  do {
++    /* determine number of sectors this cycle */
++    sector_count=(size>EFIDISK_C_MAXIOSECS) ? EFIDISK_C_MAXIOSECS : size;
++
++    /* output debug information */
++    grub_dprintf ("efidisk",
++		  "reading 0x%lx sectors at the sector 0x%llx from %s\n",
++		  (unsigned long) sector_count, (unsigned long long) sector, disk->name);
++
++    status = grub_efidisk_readwrite (disk, sector, sector_count, buf, 0);
++
++    if (status == GRUB_EFI_NO_MEDIA)
++      return grub_error (GRUB_ERR_OUT_OF_RANGE, N_("no media in `%s'"), disk->name);
++    if (status != GRUB_EFI_SUCCESS)
++      return grub_error (GRUB_ERR_READ_ERROR,
++			N_("failure reading 0x%lx sector(s) from sector 0x%llx on `%s'"),
++			(unsigned long) sector_count,
++			(unsigned long long) sector,
++			disk->name);
++      
++    /* next cycle */
++    buf+=(grub_efi_uintn_t) sector_count << disk->log_sector_size;;
++    sector+=sector_count;
++    size-=sector_count;
++  } while (size);	
+   return GRUB_ERR_NONE;
+ }
+ 
+diff -ur grub2-2.02-org/grub-core/kern/err.c grub2-2.02/grub-core/kern/err.c
+--- grub2-2.02-org/grub-core/kern/err.c	2015-05-21 11:50:29.000000000 -0400
++++ grub2-2.02/grub-core/kern/err.c	2018-09-18 18:52:05.384679170 -0400
+@@ -38,12 +38,12 @@
+ {
+   va_list ap;
+ 
+-  grub_errno = n;
+-
+   va_start (ap, fmt);
+   grub_vsnprintf (grub_errmsg, sizeof (grub_errmsg), _(fmt), ap);
+   va_end (ap);
+ 
++  grub_errno = n;
++  
+   return n;
+ }
+ 
+diff -ur grub2-2.02-org/grub-core/kern/misc.c grub2-2.02/grub-core/kern/misc.c
+--- grub2-2.02-org/grub-core/kern/misc.c	2018-09-18 15:45:06.000000000 -0400
++++ grub2-2.02/grub-core/kern/misc.c	2018-09-18 18:52:05.384679170 -0400
+@@ -164,10 +164,13 @@
+ {
+   va_list args;
+   const char *debug = grub_env_get ("debug");
++  grub_err_t save_grub_errno;
+ 
+   if (! debug)
+     return;
+ 
++  save_grub_errno=grub_errno;
++  
+   if (grub_strword (debug, "all") || grub_strword (debug, condition))
+     {
+       grub_printf ("%s:%d: ", file, line);
+@@ -176,6 +179,8 @@
+       va_end (args);
+       grub_refresh ();
+     }
++    
++  grub_errno=save_grub_errno;
+ }
+ 
+ #define PREALLOC_SIZE 255
+@@ -187,7 +192,9 @@
+   static char buf[PREALLOC_SIZE + 1];
+   char *curbuf = buf;
+   struct printf_args args;
+-
++  
++  grub_err_t save_grub_errno=grub_errno;
++  
+   parse_printf_args (fmt, &args, ap);
+ 
+   s = grub_vsnprintf_real (buf, PREALLOC_SIZE, fmt, &args);
+@@ -196,7 +203,6 @@
+       curbuf = grub_malloc (s + 1);
+       if (!curbuf)
+ 	{
+-	  grub_errno = GRUB_ERR_NONE;
+ 	  buf[PREALLOC_SIZE - 3] = '.';
+ 	  buf[PREALLOC_SIZE - 2] = '.';
+ 	  buf[PREALLOC_SIZE - 1] = '.';
+@@ -214,6 +220,8 @@
+   if (curbuf != buf)
+     grub_free (curbuf);
+ 
++  grub_errno=save_grub_errno;
++  
+   return s;
+ }
+ 
+@@ -633,6 +641,7 @@
+   const char *fmt;
+   char c;
+   grub_size_t n = 0;
++  grub_err_t save_grub_errno=grub_errno;
+ 
+   args->count = 0;
+ 
+@@ -696,7 +705,6 @@
+       args->ptr = grub_malloc (args->count * sizeof (args->ptr[0]));
+       if (!args->ptr)
+ 	{
+-	  grub_errno = GRUB_ERR_NONE;
+ 	  args->ptr = args->prealloc;
+ 	  args->count = ARRAY_SIZE (args->prealloc);
+ 	}
+@@ -805,6 +813,8 @@
+ 	args->ptr[n].ll = va_arg (args_in, long long);
+ 	break;
+       }
++
++  grub_errno=save_grub_errno;
+ }
+ 
+ static inline void __attribute__ ((always_inline))
+diff -ur grub2-2.02-org/grub-core/loader/i386/efi/linux.c grub2-2.02/grub-core/loader/i386/efi/linux.c
+--- grub2-2.02-org/grub-core/loader/i386/efi/linux.c	2018-09-18 15:45:06.000000000 -0400
++++ grub2-2.02/grub-core/loader/i386/efi/linux.c	2018-09-18 18:58:42.581278048 -0400
+@@ -265,12 +265,12 @@
+       goto fail;
+     }
+ 
+ #if defined(__x86_64__) || defined(__aarch64__)
+   grub_dprintf ("linuxefi", "checking lh->xloadflags\n");
+-  if (!(lh->xloadflags & LINUX_XLF_KERNEL_64))
++  if (! (lh->xloadflags & grub_cpu_to_le16(LINUX_XLF_EFI_HANDOVER_64))) 
+     {
+-      grub_error (GRUB_ERR_BAD_OS, N_("kernel doesn't support 64-bit CPUs"));
+-      goto fail;
++	  grub_error (GRUB_ERR_BAD_OS, N_("kernel doesn't support 64-bit EFI handover"));
++	  goto fail;
+     }
+ #endif
+ 
+diff -ur grub2-2.02-org/grub-core/normal/main.c grub2-2.02/grub-core/normal/main.c
+--- grub2-2.02-org/grub-core/normal/main.c	2018-09-18 15:45:06.000000000 -0400
++++ grub2-2.02/grub-core/normal/main.c	2018-09-18 18:52:05.384679170 -0400
+@@ -208,7 +208,7 @@
+  
+   grub_term_cls (term);
+ 
+-  msg_formatted = grub_xasprintf (_("GNU GRUB  version %s"), VERSION);
++  msg_formatted = grub_xasprintf (_("Image for Linux - TeraByte, Inc. | GNU GRUB  version %s"), VERSION);  
+   if (!msg_formatted)
+     return;
+  
+diff -ur grub2-2.02-org/include/grub/i386/linux.h grub2-2.02/include/grub/i386/linux.h
+--- grub2-2.02-org/include/grub/i386/linux.h	2018-09-18 15:45:06.000000000 -0400
++++ grub2-2.02/include/grub/i386/linux.h	2018-09-18 18:52:05.388679169 -0400
+@@ -130,12 +130,12 @@
+   grub_uint32_t kernel_alignment;
+   grub_uint8_t relocatable;
+   grub_uint8_t min_alignment;
+-#define LINUX_XLF_KERNEL_64                   (1<<0)
+-#define LINUX_XLF_CAN_BE_LOADED_ABOVE_4G      (1<<1)
+-#define LINUX_XLF_EFI_HANDOVER_32             (1<<2)
+-#define LINUX_XLF_EFI_HANDOVER_64             (1<<3)
+-#define LINUX_XLF_EFI_KEXEC                   (1<<4)
+-  grub_uint16_t xloadflags;
++#define LINUX_XLF_KERNEL_64                   (1<<0) /* this kernel has the legacy 64-bit entry point at 0x200. */
++#define LINUX_XLF_CAN_BE_LOADED_ABOVE_4G      (1<<1) /* kernel/boot_params/cmdline/ramdisk can be above 4G. */
++#define LINUX_XLF_EFI_HANDOVER_32             (1<<2) /* kernel supports 32-bit EFI handoff entry point at handover_offset. */
++#define LINUX_XLF_EFI_HANDOVER_64             (1<<3) /* kernel supports 64-bit EFI handoff entry point at handover_offset + 0x200. */
++#define LINUX_XLF_EFI_KEXEC                   (1<<4) /* kernel supports kexec EFI boot with EFI runtime support. */
++  grub_uint16_t xloadflags;			/* 2.12+ */
+   grub_uint32_t cmdline_size;
+   grub_uint32_t hardware_subarch;
+   grub_uint64_t hardware_subarch_data;
