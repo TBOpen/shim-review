@@ -60,6 +60,8 @@ the appropriate gnu-efi source.
 -------------------------------------------------------------------------------
 yes.  https://github.com/rhboot/shim/releases/tag/15.4 (shim-15.4 release)
 
+plus selected patches of commits - see Dockerfile
+
 -------------------------------------------------------------------------------
 URL for a repo that contains the exact code which was built to get this binary:
 -------------------------------------------------------------------------------
@@ -82,6 +84,8 @@ If bootloader, shim loading is, GRUB2: is CVE-2020-14372, CVE-2020-25632,
 Yes, I'll be using Ubuntu 20.04.2 GRUB 2.04 version with latest patches.
 Keeping an eye out on: https://ubuntu.com/security/cve?q=&package=grub2
 
+It's building today 5/10/2021 using grub2_2.04-1ubuntu26.11
+
 -------------------------------------------------------------------------------
 What exact implementation of Secureboot in GRUB2 ( if this is your bootloader ) you have ?
 * Upstream GRUB2 shim_lock verifier or * Downstream RHEL/Fedora/Debian/Canonical like implementation ?
@@ -89,6 +93,7 @@ What exact implementation of Secureboot in GRUB2 ( if this is your bootloader ) 
 Will be building based on Ubnutu version keeping an eye on:
 https://ubuntu.com/security/cve?q=&package=grub2
 
+grub2_2.04-1ubuntu26.11
 
 -------------------------------------------------------------------------------
 If bootloader, shim loading is, GRUB2, and previous shims were trusting affected

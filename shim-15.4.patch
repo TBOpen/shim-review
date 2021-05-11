@@ -4,7 +4,7 @@ diff -ur shim-15.3-org/data/sbat.csv shim-15.3/data/sbat.csv
 @@ -1,2 +1,3 @@
  sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
  shim,1,UEFI shim,shim,1,https://github.com/rhboot/shim
-+shim.tb,1,TeraByte,UEFI shim,1,https://www.terabyteunlimited.com
++shim.terabyte,1,TeraByte,UEFI shim,1,https://www.terabyteunlimited.com
 diff -ur shim-15.3-org/Make.defaults shim-15.3/Make.defaults
 --- shim-15.3-org/Make.defaults	2021-03-23 11:39:44.000000000 -0700
 +++ shim-15.3/Make.defaults	2021-03-23 15:39:30.365589838 -0700

@@ -12,6 +12,15 @@ RUN dnf --nodocs -y --best --allowerasing builddep efivar pesign 'shim-unsigned*
 RUN wget https://github.com/rhboot/shim/releases/download/15.4/shim-15.4.tar.bz2
 # ADD https://github.com/rhboot/shim/releases/download/15.4/shim-15.4.tar.bz2 /
 RUN tar xvfj shim-15.4.tar.bz2
+
+# Add the patches needed prior to 15.5
+ADD https://github.com/rhboot/shim/commit/4068fd42c891ea6ebdec056f461babc6e4048844.patch /
+ADD https://github.com/rhboot/shim/commit/822d07ad4f07ef66fe447a130e1027c88d02a394.patch /
+ADD https://github.com/rhboot/shim/commit/8b59591775a0412863aab9596ab87bdd493a9c1e.patch /
+RUN cd /shim-15.4 && patch -Np1 -i /4068fd42c891ea6ebdec056f461babc6e4048844.patch
+RUN cd /shim-15.4 && patch -Np1 -i /822d07ad4f07ef66fe447a130e1027c88d02a394.patch
+RUN cd /shim-15.4 && patch -Np1 -i /8b59591775a0412863aab9596ab87bdd493a9c1e.patch
+
 COPY cert/shim.cer /shim-15.4
 COPY shim-15.4.patch /
 COPY make_shim_15.4 /
