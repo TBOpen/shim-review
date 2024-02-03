@@ -1,0 +1,76 @@
+diff -ur grub2-unsigned-2.12~rc1-org/grub-core/disk/efi/efidisk.c grub2-unsigned-2.12~rc1/grub-core/disk/efi/efidisk.c
+--- grub2-unsigned-2.12~rc1-org/grub-core/disk/efi/efidisk.c	2023-06-01 05:45:00.000000000 -0400
++++ grub2-unsigned-2.12~rc1/grub-core/disk/efi/efidisk.c	2024-02-03 01:44:29.864182800 -0500
+@@ -27,6 +27,9 @@
+ #include <grub/efi/efi.h>
+ #include <grub/efi/disk.h>
+ 
++/* break up io to prevent problems under some UEFI envrionments */
++#define EFIDISK_C_MAXIOSECS 0x100U
++
+ struct grub_efidisk_data
+ {
+   grub_efi_handle_t handle;
+@@ -599,21 +602,35 @@
+ 		   grub_size_t size, char *buf)
+ {
+   grub_efi_status_t status;
+-
+-  grub_dprintf ("efidisk",
+-		"reading 0x%lx sectors at the sector 0x%llx from %s\n",
+-		(unsigned long) size, (unsigned long long) sector, disk->name);
+-
+-  status = grub_efidisk_readwrite (disk, sector, size, buf, 0);
+-
+-  if (status == GRUB_EFI_NO_MEDIA)
+-    return grub_error (GRUB_ERR_OUT_OF_RANGE, N_("no media in `%s'"), disk->name);
+-  else if (status != GRUB_EFI_SUCCESS)
+-    return grub_error (GRUB_ERR_READ_ERROR,
+-		       N_("failure reading sector 0x%llx from `%s'"),
+-		       (unsigned long long) sector,
+-		       disk->name);
+-
++  grub_size_t sector_count;
++  
++  /* break up reads to EFIDISK_C_MAXIOSECS size chunks */
++  do {
++    /* determine number of sectors this cycle */
++    sector_count=(size>EFIDISK_C_MAXIOSECS) ? EFIDISK_C_MAXIOSECS : size;
++
++    /* output debug information */
++    grub_dprintf ("efidisk",
++		  "reading 0x%lx sectors at the sector 0x%llx from %s\n",
++		  (unsigned long) sector_count, (unsigned long long) sector, disk->name);
++
++    status = grub_efidisk_readwrite (disk, sector, sector_count, buf, 0);
++
++    if (status == GRUB_EFI_NO_MEDIA)
++      return grub_error (GRUB_ERR_OUT_OF_RANGE, N_("no media in `%s'"), disk->name);
++    if (status != GRUB_EFI_SUCCESS)
++      return grub_error (GRUB_ERR_READ_ERROR,
++			N_("failure reading 0x%lx sector(s) from sector 0x%llx on `%s'"),
++			(unsigned long) sector_count,
++			(unsigned long long) sector,
++			disk->name);
++      
++    /* next cycle */
++    buf+=(grub_efi_uintn_t) sector_count << disk->log_sector_size;;
++    sector+=sector_count;
++    size-=sector_count;
++  } while (size);	
++  
+   return GRUB_ERR_NONE;
+ }
+ 
+diff -ur grub2-unsigned-2.12~rc1-org/grub-core/normal/main.c grub2-unsigned-2.12~rc1/grub-core/normal/main.c
+--- grub2-unsigned-2.12~rc1-org/grub-core/normal/main.c	2024-02-03 01:14:04.000000000 -0500
++++ grub2-unsigned-2.12~rc1/grub-core/normal/main.c	2024-02-03 02:00:45.804613800 -0500
+@@ -209,7 +209,7 @@
+ 
+   grub_term_cls (term);
+ 
+-  msg_formatted = grub_xasprintf (_("GNU GRUB  version %s"), VERSION);
++  msg_formatted = grub_xasprintf (_("Image for Linux - TeraByte, Inc. | GNU GRUB  version %s"), VERSION);
+   if (!msg_formatted)
+     return;
+ 
