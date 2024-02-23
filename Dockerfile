@@ -1,5 +1,5 @@
 # Build SHIM 
-FROM fedora:38
+FROM fedora:37
 
 # just copied this from the Fedora submission
 RUN dnf --nodocs -y --best --allowerasing --disablerepo='*' --enablerepo=fedora --enablerepo=updates install dnf-plugins-core
@@ -25,7 +25,7 @@ COPY cert/shim.cer /shim-15.8
 COPY shim-15.8.patch /
 COPY make_shim_15.8 /
 RUN chmod +x /make_shim_15.8
-RUN ./make_shim_15.8
+RUN ./make_shim_15.8 &> shim_build.log
 RUN strip /shim-15.8/shimx64.efi
 
 # copy files out using:

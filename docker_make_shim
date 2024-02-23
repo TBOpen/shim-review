@@ -22,6 +22,7 @@ fi
 mkdir -p "${shimout}"
 containerid=$(docker create "${shimtag}")
 docker cp "${containerid}:/${shimdir}/shimx64.efi" "${shimout}"
+docker cp "${containerid}:/shim_build.log" "${shimout}"
 docker rm -v ${containerid}
 
 echo "${0} script completed."

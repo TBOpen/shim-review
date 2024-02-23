@@ -53,12 +53,8 @@ You will be asked to post the contents of these mails in your `shim-review` issu
 - Name:  David Flicek
 - Position: President
 - Email address: corp@terabyteunlimited.com
-- PGP key fingerprint:  No longer have an up to date one.
-Anyway, looks like I still have support@terabyteunlimited.com in the PGP database.
+- PGP key fingerprint:  2891C706D99AB4B2ECF5D1BE64B1B1216F7DC24B
 
-(Key should be signed by the other security contacts, pushed to a keyserver
-like keyserver.ubuntu.com, and preferably have signatures that are reasonably
-well known in the Linux community.)
 
 *******************************************************************************
 ### Who is the secondary contact for security updates, etc.?
@@ -154,7 +150,9 @@ Yes.
 ### Were old shims hashes provided to Microsoft for verification and to be added to future DBX updates?
 ### Does your new chain of trust disallow booting old GRUB2 builds affected by the CVEs?
 *******************************************************************************
-N/A
+No, there is no need to provide old shim hashes to MS - no bugs in our specific parts.
+(FWIW, I thought the whole concept of SBAT was to not overpopulate the limited DBX - if everyone adds their old hash to DBX the whole problem is back)
+Yes, the old grub versions will not boot with the new shim.
 
 *******************************************************************************
 ### If your boot chain of trust includes a Linux kernel:
@@ -202,7 +200,7 @@ Dockerfile method:
 ### Which files in this repo are the logs for your build?
 This should include logs for creating the buildroots, applying patches, doing the build, creating the archives, etc.
 *******************************************************************************
-All done in the Dockerfile.
+The "terabyte_shim-15.8_built" directory will contain the build log as well.
 
 *******************************************************************************
 ### What changes were made in the distor's secure boot chain since your SHIM was last signed?
@@ -214,7 +212,7 @@ as mentioned every major kernel update (e.g. 5.14 to 5.15) gets a new key.
 *******************************************************************************
 ### What is the SHA256 hash of your final SHIM binary?
 *******************************************************************************
-0c19056e13f3e0658dfa5c0f223cad9b712fb666e02422f9703e22bd09e8333c
+02c4bf81a5f359213d80ec365366d8be35b02bf84e522802c5fc8ee8694c8e05 *shimx64.efi
 
 *******************************************************************************
 ### How do you manage and protect the keys used in your SHIM?
@@ -237,6 +235,38 @@ and only append your own. More information on how SBAT works can be found
 *******************************************************************************
 Yes, we append our own SBAT entries.
 
+SHIM:
+
+sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
+shim,4,UEFI shim,shim,1,https://github.com/rhboot/shim
+shim.terabyte,1,TeraByte,UEFI shim,2,https://www.terabyteunlimited.com
+
+GRUB2:
+sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
+grub,4,Free Software Foundation,grub,2.12~rc1,https://www.gnu.org/software/grub/
+grub.ubuntu,1,Ubuntu,grub2,2.12~rc1-10ubuntu4,https://www.ubuntu.com/
+grub.peimage,1,Canonical,grub2,2.12~rc1-10ubuntu4,https://salsa.debian.org/grub-team/grub/-/blob/master/debian/patches/secure-boot/efi-use-peimage-shim.patch
+grub.terabyte,1,TeraByte,grub2,2.12-tbu-2024-1,https://www.terabyteunlimited.com/
+
+Our UEFI Applications:
+
+BootIt:
+
+sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
+BIU.TERABYTE,1,TeraByte,BootIt UEFI,1,https://www.terabyteunlimited.com
+
+Image for Linux:
+
+sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
+IFU.TERABYTE,1,TeraByte,Image for UEFI,1,https://www.terabyteunlimited.com
+
+TBOSDT:
+
+sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
+TBOSDT.TERABYTE,1,TeraByte,TBOSDT UEFI,1,https://www.terabyteunlimited.com
+
+
+
 *******************************************************************************
 ### If shim is loading GRUB2 bootloader, which modules are built into your signed GRUB2 image?
 *******************************************************************************
@@ -251,7 +281,7 @@ video help peimage
 *******************************************************************************
 ### If you are using systemd-boot on arm64 or riscv, is the fix for [unverified Devicetree Blob loading](https://github.com/systemd/systemd/security/advisories/GHSA-6m6p-rjcq-334c) included?
 *******************************************************************************
-N/A (Init)
+N/A 
 
 *******************************************************************************
 ### What is the origin and full version number of your bootloader (GRUB2 or systemd-boot or other)?
@@ -287,6 +317,4 @@ No.
 *******************************************************************************
 ### Add any additional information you think we may need to validate this shim.
 *******************************************************************************
-NOTE: Everytime you build the shim it gets a different SHA256 because the PE
-date and time fields.   If you binary compare you can see the differences is
-only in the header.
+N/A.
