@@ -235,6 +235,7 @@ and only append your own. More information on how SBAT works can be found
 *******************************************************************************
 Yes, we append our own SBAT entries.
 
+```
 SHIM:
 
 sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
@@ -264,8 +265,7 @@ TBOSDT:
 
 sbat,1,SBAT Version,sbat,1,https://github.com/rhboot/shim/blob/main/SBAT.md
 TBOSDT.TERABYTE,1,TeraByte,TBOSDT UEFI,1,https://www.terabyteunlimited.com
-
-
+```
 
 *******************************************************************************
 ### If shim is loading GRUB2 bootloader, which modules are built into your signed GRUB2 image?
