@@ -1,0 +1,40 @@
+#!/bin/bash
+
+##############################
+# setup variables
+##############################
+shimdir=shim-16.1
+shimtag=terabyte_${shimdir}
+shimout=${shimtag}_built
+
+##############################
+# build
+##############################
+if [ "$1" = "rebuild" ]; then
+ docker build --progress=plain --no-cache -t "${shimtag}" .
+else
+ docker build --progress=plain -t "${shimtag}" .
+fi
+
+if [ $? -eq 0 ]; then 
+	##############################
+	# copy out the binary
+	##############################
+	mkdir -p "${shimout}"
+	containerid=$(docker create "${shimtag}")
+	docker cp "${containerid}:/${shimdir}/shimx64.efi" "${shimout}"
+	docker cp "${containerid}:/shim_build.log" "${shimout}"
+	docker rm -v ${containerid}
+	if command -v sha256sum >/dev/null 2>&1; then
+		cd "${shimout}"
+		sha256sum "shimx64.efi" > "sha256.txt"
+		cd ..
+	else
+		echo "Warning: sha256sum command not found. Skipping checksum."
+	fi    
+else
+    echo "docker build failed!"
+fi
+
+echo "${0} script completed."
+
