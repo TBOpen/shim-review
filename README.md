@@ -105,10 +105,10 @@ No Change Since Last Verification:
 *******************************************************************************
 ### Who is the secondary contact for security updates, etc.?
 *******************************************************************************
-- Name: N/A 
-- Position: N/A
-- Email address: N/A
-- PGP key fingerprint: N/A
+- Name: Brooke Bonovitch
+- Position: Program Manager
+- Email address: bb@terabyteunlimited.com
+- PGP key fingerprint: E9B10334DF49DA38E5C842A3F48CE330A7AF63AA
 
 *******************************************************************************
 ### Were these binaries created from the 16.1 shim release tar?
