@@ -272,6 +272,14 @@ Hint: If it does not, we are not likely to sign your shim.
 *******************************************************************************
 By enabling the option(s) in the kernel to do so.
 
+Under KConfig Security - Integrity Mode.
+
+Debian Patches:
+  depending on kernel (we are at 6.17.x minimum):
+	https://salsa.debian.org/kernel-team/linux/-/tree/debian/6.17/forky/debian/patches/features/all/lockdown?ref_type=heads
+  https://salsa.debian.org/kernel-team/linux/-/tree/debian/6.18/forky/debian/patches/features/all/lockdown?ref_type=heads
+  https://salsa.debian.org/kernel-team/linux/-/tree/debian/6.19/forky/debian/patches/features/all/lockdown?ref_type=heads
+
 *******************************************************************************
 ### Do you build your signed kernel with additional local patches? What do they do?
 *******************************************************************************
