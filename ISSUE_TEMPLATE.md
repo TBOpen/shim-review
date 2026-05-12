@@ -12,12 +12,13 @@ Confirm the following are included in your repo, checking each box:
 *******************************************************************************
 ### What is the link to your tag in a repo cloned from rhboot/shim-review?
 *******************************************************************************
-https://github.com/TBOpen/shim-review/releases/tag/TeraByte-Shim16.1-x64-20260501
+~~https://github.com/TBOpen/shim-review/releases/tag/TeraByte-Shim16.1-x64-20260501~~
+https://github.com/TBOpen/shim-review/releases/tag/TeraByte-Shim16.1-x64-20260511
 
 *******************************************************************************
 ### What is the SHA256 hash of your final SHIM binary?
 *******************************************************************************
-10825ab529301401b5b18854537726009336a8ebbad8e661fd88561ed4dfa574 *shimx64.efi
+f35d4531b064f81f226de242f737c9fb829ef4690a0fffde73f589f636bb5987  shimx64.efi
 
 *******************************************************************************
 ### What is the link to your previous shim review request (if any, otherwise N/A)?

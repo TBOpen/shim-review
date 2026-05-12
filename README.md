@@ -318,9 +318,7 @@ If your shim binaries can't be reproduced using the provided Dockerfile, please 
 Dockerfile method:
 
 1 - Run "docker_make_shim".
-2 - The file will be placed in "terabyte_shim-15.8_built"
-
-NOTE: The PE Timestamp changes on each build so the HASH is different every build.  But you can compare the files and see it's just the timestamp and pe checksum in the header that are different. 
+2 - The file will be placed in "terabyte_shim-16.1_built"
 
 *******************************************************************************
 ### Which files in this repo are the logs for your build?
@@ -335,12 +333,12 @@ For example, signing new kernel's variants, UKI, systemd-boot, new certs, new CA
 Skip this, if this is your first application for having shim signed.
 *******************************************************************************
 The new SHIM has a new certificate so won't load any of the prior items and
-every major kernel update (e.g. 5.16 to 5.17) gets a new key.
+every kernel update gets a new key.
 
 *******************************************************************************
 ### What is the SHA256 hash of your final shim binary?
 *******************************************************************************
-10825ab529301401b5b18854537726009336a8ebbad8e661fd88561ed4dfa574 *shimx64.efi
+f35d4531b064f81f226de242f737c9fb829ef4690a0fffde73f589f636bb5987  shimx64.efi
 
 *******************************************************************************
 ### How do you manage and protect the keys used in your shim?
