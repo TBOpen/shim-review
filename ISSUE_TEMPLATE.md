@@ -31,5 +31,5 @@ From 2021: https://github.com/rhboot/shim-review/issues/139
 *******************************************************************************
 ### If no security contacts have changed since verification, what is the link to your request, where they've been verified (if any, otherwise N/A)?
 *******************************************************************************
-There are no changes since being verified in 2024.  I would guess the link is
+Added secondary contact, no change to primary contact since being verified in 2024.  I would guess the link you want is
 https://github.com/rhboot/shim-review/issues/369
