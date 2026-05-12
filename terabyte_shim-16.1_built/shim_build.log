@@ -7,7 +7,7 @@ Press enter to start build
 gcc -std=gnu11 -Og -g3 -Wall -Wextra -Wno-missing-field-initializers -Werror -o generate_sbat_var_defs /shim-16.1/generate_sbat_var_defs.c
 ./generate_sbat_var_defs /shim-16.1 > generated_sbat_var_defs.h
 sed	-e "s,@@VERSION@@,16.1," \
-	-e "s,@@UNAME@@,Linux x86_64 unknown unknown GNU/Linux," \
+	-e "s,@@UNAME@@,buildhost," \
 	-e "s,@@COMMIT@@,afc49558b34548644c1cd0ad1b6526a9470182ed," \
 	< /shim-16.1/version.c.in > version.c
 gcc -std=gnu11 -ggdb -gdwarf-4 -gstrict-dwarf -ffreestanding -fmacro-prefix-map=/shim-16.1/= -fno-stack-protector -fno-strict-aliasing -fpic -fshort-wchar -Os -Wall -Wextra -Wno-missing-field-initializers  -mno-mmx -mno-sse -mno-red-zone -nostdinc -maccumulate-outgoing-args  -m64 -DMDE_CPU_X64 -DPAGE_SIZE=4096 -Werror -nostdinc -I/shim-16.1/Cryptlib -I/shim-16.1/Cryptlib/Include -I/shim-16.1/gnu-efi/inc -I/shim-16.1/gnu-efi/inc/x86_64 -I/shim-16.1/gnu-efi/inc/protocol -I/shim-16.1/include -iquote /shim-16.1 -iquote /shim-16.1 -isystem /shim-16.1/include/system -isystem /usr/lib/gcc/x86_64-redhat-linux/15/include -DDEFAULT_LOADER='L"grubx64.efi"' -DDEFAULT_LOADER_CHAR='"grubx64.efi"' -DDISABLE_FALLBACK -DDISABLE_LOAD_OPTIONS -DEFI_ARCH='L"x64"' -DDEBUGDIR='L"/usr/lib/debug/usr/share/shim/x64-16.1/"' -DVENDOR_CERT_FILE=\"shim.cer\"   -c -o shim.o shim.c
@@ -604,7 +604,7 @@ objcopy -D -j .text -j .sdata -j .data -j .data.ident \
 	--target efi-app-x86_64 shimx64.so shimx64.efi
 ./post-process-pe -vv -n shimx64.efi
 set_dll_characteristics():357: Updating DLL Characteristics from 0x0000 to 0x0100
-fix_checksum():459: Updating checksum from 0x000faacc to 0x000fabcc
+fix_checksum():459: Updating checksum from 0x00103a5b to 0x00103b5b
 objcopy -D -j .text -j .sdata -j .data \
 	-j .dynamic -j .rodata -j .rel* \
 	-j .rela* -j .dyn -j .reloc -j .eh_frame -j .sbat \
